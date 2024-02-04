@@ -1,0 +1,698 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue255;\red185\green112\blue179;
+\red209\green220\blue217;\red113\green196\blue195;\red231\green131\blue13;\red109\green123\blue122;\red24\green149\blue153;
+}
+{\*\expandedcolortbl;;\cssrgb\c0\c1\c1;\cssrgb\c100000\c100000\c99985\c0;\cssrgb\c77854\c53133\c75328;
+\cssrgb\c85421\c88971\c88112;\cssrgb\c50679\c80677\c80959;\cssrgb\c93239\c58551\c3490;\cssrgb\c50215\c55346\c55238;\cssrgb\c5634\c64453\c66363;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+#include\cf2 \cb3  \cf2 \cb3 <LiquidCrystal.h>\cf2 \cb3 \
+\cf2 \cb3 #include\cf2 \cb3  \cf2 \cb3 <SoftwareSerial.h>\cf2 \cb3 \
+\
+LiquidCrystal \cf2 \cb3 lcd\cf2 \cb3  (\cf2 \cb3 4\cf2 \cb3 , \cf2 \cb3 5\cf2 \cb3 , \cf2 \cb3 6\cf2 \cb3 , \cf2 \cb3 7\cf2 \cb3 , \cf2 \cb3 8\cf2 \cb3 , \cf2 \cb3 9\cf2 \cb3 );\
+SoftwareSerial \cf2 \cb3 mySerial\cf2 \cb3  (\cf2 \cb3 2\cf2 \cb3 , \cf2 \cb3 3\cf2 \cb3 );\cf2 \cb3    //(RX, TX);\cf2 \cb3 \
+\
+String val = \cf2 \cb3 "No Data"\cf2 \cb3 ;\
+String oldval;\
+String newval = \cf2 \cb3 "No Data"\cf2 \cb3 ;\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 int\cf2 \cb3  i = \cf2 \cb3 0\cf2 \cb3 ;\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 //Morse\cf2 \cb3 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 const\cf2 \cb3  \cf2 \cb3 int\cf2 \cb3  led1 = \cf2 \cb3 13\cf2 \cb3 ;\
+\cf2 \cb3 const\cf2 \cb3  \cf2 \cb3 int\cf2 \cb3  led2 = \cf2 \cb3 10\cf2 \cb3 ;\
+\cf2 \cb3 const\cf2 \cb3  \cf2 \cb3 int\cf2 \cb3  buz = \cf2 \cb3 12\cf2 \cb3 ;\
+String code = newval;\
+\cf2 \cb3 int\cf2 \cb3  len = \cf2 \cb3 0\cf2 \cb3 ;\
+\cf2 \cb3 char\cf2 \cb3  ch;\
+\cf2 \cb3 char\cf2 \cb3  new_char;\
+\cf2 \cb3 int\cf2 \cb3  unit_delay = \cf2 \cb3 100\cf2 \cb3 ;\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 dot\cf2 \cb3 () \{\
+  \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "."\cf2 \cb3 );\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (led1, HIGH);\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (buz, HIGH);\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (led1, LOW);\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (buz, LOW);\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+\}\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 dash\cf2 \cb3 () \{\
+  \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "-"\cf2 \cb3 );\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (led2, HIGH);\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (buz, HIGH);\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 6\cf2 \cb3 );\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (led2, LOW);\
+  \cf2 \cb3 digitalWrite\cf2 \cb3 (buz, LOW);\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 6\cf2 \cb3 );\
+\}\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 A\cf2 \cb3 () \{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 B\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 C\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 D\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 E\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 f\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 G\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 H\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 I\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 J\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 K\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 L\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 M\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 N\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 O\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay* \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 P\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 Q\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 R\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 S\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 T\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 U\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 V\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 W\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 X\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 Y\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 Z\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 one\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 two\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 three\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 four\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 five\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 six\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 seven\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 eight\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 nine\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dot\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 zero\cf2 \cb3 ()\
+\{\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay);\
+  \cf2 \cb3 dash\cf2 \cb3 ();\
+  \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 10\cf2 \cb3 );\
+\}\
+\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 morse\cf2 \cb3 () \{\
+  \cf2 \cb3 if\cf2 \cb3  (ch == 'A' || ch == 'a') \{\
+    \cf2 \cb3 A\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'B' || ch == 'b')\
+  \{\
+    \cf2 \cb3 B\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'C' || ch == 'c')\
+  \{\
+    \cf2 \cb3 C\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'D' || ch == 'd')\
+  \{\
+    \cf2 \cb3 D\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'E' || ch == 'e')\
+  \{\
+    \cf2 \cb3 E\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'f' || ch == 'f')\
+  \{\
+    \cf2 \cb3 f\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'G' || ch == 'g')\
+  \{\
+    \cf2 \cb3 G\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'H' || ch == 'h')\
+  \{\
+    \cf2 \cb3 H\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'I' || ch == 'i')\
+  \{\
+    \cf2 \cb3 I\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'J' || ch == 'j')\
+  \{\
+    \cf2 \cb3 J\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'K' || ch == 'k')\
+  \{\
+    \cf2 \cb3 K\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'L' || ch == 'l')\
+  \{\
+    \cf2 \cb3 L\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'M' || ch == 'm')\
+  \{\
+    \cf2 \cb3 M\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'N' || ch == 'n')\
+  \{\
+    \cf2 \cb3 N\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'O' || ch == 'o')\
+  \{\
+    \cf2 \cb3 O\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'P' || ch == 'p')\
+  \{\
+    \cf2 \cb3 P\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'Q' || ch == 'q')\
+  \{\
+    \cf2 \cb3 Q\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'R' || ch == 'r')\
+  \{\
+    \cf2 \cb3 R\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'S' || ch == 's')\
+  \{\
+    \cf2 \cb3 S\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'T' || ch == 't')\
+  \{\
+    \cf2 \cb3 T\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'U' || ch == 'u')\
+  \{\
+    \cf2 \cb3 U\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'V' || ch == 'v')\
+  \{\
+    \cf2 \cb3 V\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'W' || ch == 'w')\
+  \{\
+    \cf2 \cb3 W\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'X' || ch == 'x')\
+  \{\
+    \cf2 \cb3 X\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'Y' || ch == 'y')\
+  \{\
+    \cf2 \cb3 Y\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == 'Z' || ch == 'z')\
+  \{\
+    \cf2 \cb3 Z\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '0')\
+  \{\
+    \cf2 \cb3 zero\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '1')\
+  \{\
+    \cf2 \cb3 one\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '2')\
+  \{\
+    \cf2 \cb3 two\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '3')\
+  \{\
+    \cf2 \cb3 three\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '4')\
+  \{\
+    \cf2 \cb3 four\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '5')\
+  \{\
+    \cf2 \cb3 five\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '6')\
+  \{\
+    \cf2 \cb3 six\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '7')\
+  \{\
+    \cf2 \cb3 seven\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '8')\
+  \{\
+    \cf2 \cb3 eight\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '9')\
+  \{\
+    \cf2 \cb3 nine\cf2 \cb3 ();\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 " "\cf2 \cb3 );\
+  \}\
+\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == ' ') \{\
+    \cf2 \cb3 delay\cf2 \cb3 (unit_delay * \cf2 \cb3 7\cf2 \cb3 );\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "/ "\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \cf2 \cb3 if\cf2 \cb3  (ch == '\cf2 \cb3 \\n\cf2 \cb3 ') \{\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 println\cf2 \cb3 (\cf2 \cb3 ""\cf2 \cb3 );\
+  \}\
+  \cf2 \cb3 else\cf2 \cb3  \{\
+    \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 println\cf2 \cb3 (\cf2 \cb3 "Unknown Character!"\cf2 \cb3 );\
+  \}\
+\
+\}\
+\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 String2Morse\cf2 \cb3 () \{\
+  len = \cf2 \cb3 code\cf2 \cb3 .\cf2 \cb3 length\cf2 \cb3 ();\
+  \cf2 \cb3 for\cf2 \cb3  (\cf2 \cb3 int\cf2 \cb3  i = \cf2 \cb3 0\cf2 \cb3 ; i < len; i++) \{\
+    ch = \cf2 \cb3 code\cf2 \cb3 .\cf2 \cb3 charAt\cf2 \cb3 (i);\
+    \cf2 \cb3 morse\cf2 \cb3 ();\
+  \}\
+\}\
+\
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 setup\cf2 \cb3 () \
+\{\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   // put your setup code here, to run once:\cf2 \cb3 \
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 begin\cf2 \cb3 (\cf2 \cb3 16\cf2 \cb3 ,\cf2 \cb3 2\cf2 \cb3 );\
+  \cf2 \cb3 mySerial\cf2 \cb3 .\cf2 \cb3 begin\cf2 \cb3 (\cf2 \cb3 9600\cf2 \cb3 );\
+  \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 begin\cf2 \cb3 (\cf2 \cb3 9600\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 , \cf2 \cb3 0\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "      DCS      "\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 ,\cf2 \cb3 1\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "    PROJECT    "\cf2 \cb3 );\
+  \cf2 \cb3 delay\cf2 \cb3 (\cf2 \cb3 4000\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 clear\cf2 \cb3 ();\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 , \cf2 \cb3 0\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "WIRELESS NOTICE"\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 ,\cf2 \cb3 1\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "     BOARD     "\cf2 \cb3 );\
+  \cf2 \cb3 delay\cf2 \cb3 (\cf2 \cb3 2000\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 clear\cf2 \cb3 ();\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 , \cf2 \cb3 0\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "      AND     "\cf2 \cb3 );\
+  \cf2 \cb3 delay\cf2 \cb3 (\cf2 \cb3 2000\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 clear\cf2 \cb3 ();\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 , \cf2 \cb3 0\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "  MORSE CODE  "\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 ,\cf2 \cb3 1\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "  CONVERTER   "\cf2 \cb3 );\
+  \cf2 \cb3 delay\cf2 \cb3 (\cf2 \cb3 3000\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 clear\cf2 \cb3 ();\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (\cf2 \cb3 "Welcome!"\cf2 \cb3 );\
+\cf2 \cb3   //MORSE CODE\cf2 \cb3 \
+  \cf2 \cb3 pinMode\cf2 \cb3 (led1, OUTPUT);\
+  \cf2 \cb3 pinMode\cf2 \cb3 (led2, OUTPUT);\
+  \cf2 \cb3 pinMode\cf2 \cb3 (buz, OUTPUT);\
+\}\
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 void\cf2 \cb3  \cf2 \cb3 loop\cf2 \cb3 () \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 // NOTICE BOARD\cf2 \cb3 \
+\{\
+  val = \cf2 \cb3 mySerial\cf2 \cb3 .\cf2 \cb3 readString\cf2 \cb3 ();\
+  \cf2 \cb3 val\cf2 \cb3 .\cf2 \cb3 trim\cf2 \cb3 ();\
+  \cf2 \cb3 if\cf2 \cb3  (val != \cf2 \cb3 ""\cf2 \cb3 )\{\
+  \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 println\cf2 \cb3 (val);\
+  \}\
+  \cf2 \cb3 if\cf2 \cb3 (val != oldval)\
+  \{\
+    newval = val;\
+  \}\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 clear\cf2 \cb3 ();\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 setCursor\cf2 \cb3 (\cf2 \cb3 0\cf2 \cb3 , \cf2 \cb3 0\cf2 \cb3 );\
+  \cf2 \cb3 lcd\cf2 \cb3 .\cf2 \cb3 print\cf2 \cb3 (newval);\
+\cf2 \cb3 // MORSE CODE\cf2 \cb3 \
+  code = newval;\
+  \cf2 \cb3 if\cf2 \cb3 (code != \cf2 \cb3 "No Data"\cf2 \cb3 )\{\
+      \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 println\cf2 \cb3 (code + \cf2 \cb3 " = "\cf2 \cb3 );\
+      \cf2 \cb3 String2Morse\cf2 \cb3 ();\
+      \cf2 \cb3 Serial\cf2 \cb3 .\cf2 \cb3 println\cf2 \cb3 (); \
+      \cf2 \cb3 delay\cf2 \cb3 (\cf2 \cb3 1000\cf2 \cb3 );\
+      val = oldval;\
+  \}\
+  \
+\}\
+}
